@@ -1,0 +1,21 @@
+
+docker run -p 27017:27017 -v ~/docker/mongo/data/db:/data/db -d mongo
+
+docker run -ti -d --name fav-mysql -p 3307:3306 -e MYSQL_ROOT_PASSWORD=878266 mysql
+
+docker inspect 90e9be96c30a | grep IPAddress
+
+docker exec -it 7d38851c791c /bin/bash
+
+docker run -p 6379:6379 -v ~/docker/redis/data:/data  -d redis:latest redis-server --appendonly yes
+
+docker run -d --name elasticsearch6802-lch -p 9200:9200 -p 9300:9300 -e "ES_JAVA_OPTS=-Xms512m -Xmx512m" -e "discovery.type=single-node" elasticsearch:6.8.0
+
+
+docker run -d --name rabbitmq-lch -p 5672:5672 -p 15672:15672 -v ~/docker/rabbitmq/data:/var/lib/rabbitmq -e RABBITMQ_DEFAULT_VHOST=/  -e RABBITMQ_DEFAULT_USER=guest -e RABBITMQ_DEFAULT_PASS=guest rabbitmq:3.8.2-management
+
+
+docker cp /Users/lichenghang/Downloads/elasticsearch-analysis-ik-6 19b0864796cf:/usr/share/elasticsearch/plugins
+
+
+docker run -d -p 8080:40100 fav:0.0.3

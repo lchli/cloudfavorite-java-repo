@@ -1,0 +1,43 @@
+
+note:
+1,create mapping,post http://localhost:9200/xc_course/doc/_mapping
+ {
+
+       "properties": {
+              "title": {
+                     "type": "text"
+
+               },
+              "url": {
+                 "type": "text"
+
+}, "uid":{
+                "type":"keyword",
+                "index":false
+              },
+              "userId":{
+                "type":"keyword"
+},"timestamp": {
+                           "type": "date",
+                           "format": "yyyy‐MM‐dd HH:mm:ss||yyyy‐MM‐dd||epoch_millis"
+                       } }
+
+  }
+
+2,delete index,delete http://localhost:9200/xc_course
+3,create index,put http://localhost:9200/xc_course
+{
+     "settings":{
+     "index":{
+         "number_of_shards":1,
+         "number_of_replicas":0
+       }
+} }
+
+4,curl -H "Content-Type:application/json" -X PUT -d '{
+                                                           "settings":{
+                                                           "index":{
+                                                               "number_of_shards":1,
+                                                               "number_of_replicas":0
+                                                             }
+                                                      } }' http://localhost:9200/xc_course

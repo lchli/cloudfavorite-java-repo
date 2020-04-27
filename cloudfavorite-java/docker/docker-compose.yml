@@ -1,0 +1,68 @@
+#执行docker-compose up就可以启动相关容器了
+version: "3"
+services:
+
+  db:
+    container_name: db
+    image: mysql:latest
+    volumes:
+      - ~/docker/mysql/data:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 878266
+   # command: COPY *.sql /docker-entrypoint-initdb.d/
+    ports:
+      - "3306:3306"
+
+
+  redis:
+    image: redis:latest
+    volumes:
+      - ~/docker/redis/data:/data
+      - ~/docker/redis/redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    restart: always
+
+  rabbitmq:
+    image: rabbitmq:3.8.2-management
+    volumes:
+      - ~/docker/rabbitmq/data:/var/lib/rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_VHOST: /
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  es:
+    image: elasticsearch:6.8.0
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    restart: always
+    environment:
+      ES_JAVA_OPTS: "-Xms512m -Xmx1024m"
+      RABBITMQ_DEFAULT_USER: guest
+      "discovery.type": "single-node"
+
+  fav:
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+      - es
+    image: fav:latest
+    ports:
+      - "8080:40100"
+    restart: always
+    environment:
+      mysql_host: db:3306
+      mysql_username: root
+      mysql_pwd: 878266
+      rabbitmq_host: rabbitmq
+      redis_host: redis
+      elasticsearch_host: es
