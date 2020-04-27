@@ -1,0 +1,1 @@
+# cloudfavorite-java-repo
