@@ -55,3 +55,4 @@ xuecheng:
     queue: queue_cms_postpage_03
     routingKey: 5b30cba5f58b4411fc6cb1e5    #此routingKey为门户站点ID
 
+#部署到华为云cce时mysql的地址要写成容器实际ip地址。可以配置环境变量。
