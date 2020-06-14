@@ -29,4 +29,6 @@ ENTRYPOINT ["java","-Djava.security.egd=file:/dev/./urandom","-Dspring.profiles.
 
 #docker run -d -p 80:40100 fav:1.0.1
 
+
 #mvn clean package docker:build -Dmaven.test.skip=true
+#mvn clean kotlin:compile package docker:build -Dmaven.test.skip=true

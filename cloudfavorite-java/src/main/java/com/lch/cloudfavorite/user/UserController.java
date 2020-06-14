@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/user")
 public class UserController {
     @Autowired
-    UserRepository userRepository;
-    @Autowired
     TokenUtil tokenUtil;
+    @Autowired
+    UserMapper userMapper;
 
     @PostMapping(value = "/register", produces = {MediaType.APPLICATION_JSON_VALUE})
     public RegisterResponse register(@RequestParam("account") String account, @RequestParam("pwd") String pwd) {
@@ -27,7 +27,7 @@ public class UserController {
                 return response;
             }
 
-            UserEntity old = userRepository.findByAccount(account);
+            UserEntity old = userMapper.findByAccount(account);
             if (old != null) {
                 response.markErrorCode();
                 response.errmsg = "账号已经存在";
@@ -39,7 +39,7 @@ public class UserController {
             userEntity.pwdMd5 = DigestUtils.md5DigestAsHex(pwd.getBytes());
             userEntity.uid = SingleInstances.snowFlake.nextId() + "";
 
-            userEntity = userRepository.save(userEntity);
+            int _id = userMapper.save(userEntity);
 
             response.account = userEntity.account;
             response.uid = userEntity.uid;
@@ -68,7 +68,7 @@ public class UserController {
                 return response;
             }
 
-            UserEntity old = userRepository.findByAccount(account);
+            UserEntity old = userMapper.findByAccount(account);
             if (old == null) {
                 response.markErrorCode();
                 response.errmsg = "账号不存在";

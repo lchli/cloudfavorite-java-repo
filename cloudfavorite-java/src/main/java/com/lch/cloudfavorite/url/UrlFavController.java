@@ -17,10 +17,11 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/fav")
 public class UrlFavController {
-    @Autowired
-    UrlRepository urlRepository;
+
     @Autowired
     TokenUtil tokenUtil;
+    @Autowired
+    UrlMapper urlMapper;
 
     @Autowired
     RabbitTemplate rabbitTemplate;
@@ -50,23 +51,23 @@ public class UrlFavController {
             entity.createDate = System.currentTimeMillis();
             entity.uid = SingleInstances.snowFlake.nextId() + "";
 
-            urlRepository.save(entity);
+            urlMapper.save(entity);
 
 
             //创建消息对象
-            Map<String,String> msg = new HashMap<>();
-            msg.put("action","write");
-            msg.put("url",url);
-            msg.put("title",title);
-            msg.put("userId",userId);
-            msg.put("uid",entity.uid);
-            msg.put("createDate",entity.createDate+"");
+            Map<String, String> msg = new HashMap<>();
+            msg.put("action", "write");
+            msg.put("url", url);
+            msg.put("title", title);
+            msg.put("userId", userId);
+            msg.put("uid", entity.uid);
+            msg.put("createDate", entity.createDate + "");
             //转成json串
             String jsonString = JSON.toJSONString(msg);
             //发送给mq
             //站点id
             //String siteId = cmsPage.getSiteId();
-            rabbitTemplate.convertAndSend(RabbitmqConfig.EX_ROUTING_CMS_POSTPAGE,"5b30cba5f58b4411fc6cb1e5",jsonString);
+            rabbitTemplate.convertAndSend(RabbitmqConfig.EX_ROUTING_CMS_POSTPAGE, "5b30cba5f58b4411fc6cb1e5", jsonString);
 
         } catch (Throwable e) {
             e.printStackTrace();
@@ -97,7 +98,7 @@ public class UrlFavController {
                 return response;
             }
 
-            UrlEntity old = urlRepository.findByUid(favId);
+            UrlEntity old = urlMapper.findByUid(favId);
             if (old == null) {
                 response.markErrorCode();
                 response.errmsg = "数据不存在";
@@ -110,19 +111,19 @@ public class UrlFavController {
                 return response;
             }
 
-            urlRepository.delete(old);
+            urlMapper.deleteByUid(old.uid);
 
             //创建消息对象
-            Map<String,String> msg = new HashMap<>();
-            msg.put("action","delete");
+            Map<String, String> msg = new HashMap<>();
+            msg.put("action", "delete");
 
-            msg.put("uid",favId);
+            msg.put("uid", favId);
             //转成json串
             String jsonString = JSON.toJSONString(msg);
             //发送给mq
             //站点id
             //String siteId = cmsPage.getSiteId();
-            rabbitTemplate.convertAndSend(RabbitmqConfig.EX_ROUTING_CMS_POSTPAGE,"5b30cba5f58b4411fc6cb1e5",jsonString);
+            rabbitTemplate.convertAndSend(RabbitmqConfig.EX_ROUTING_CMS_POSTPAGE, "5b30cba5f58b4411fc6cb1e5", jsonString);
 
         } catch (Throwable e) {
             e.printStackTrace();
@@ -152,7 +153,7 @@ public class UrlFavController {
                 return response;
             }
 
-            response.items = urlRepository.findByUserId(userId);
+            response.items = urlMapper.findByUserId(userId);
 
         } catch (Throwable e) {
             e.printStackTrace();
