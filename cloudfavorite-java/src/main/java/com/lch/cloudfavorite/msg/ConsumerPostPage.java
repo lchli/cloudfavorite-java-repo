@@ -25,7 +25,7 @@ public class ConsumerPostPage {
         String action = (String) map.get("action");
         //校验页面是否合法
 
-        if (action.equals("write")) {
+        if (action.equals("write")) {//todo update msg. appsign.
             postService.writePost((String) map.get("url"), (String) map.get("title"),
                     (String) map.get("userId"), (String) map.get("uid"),(String) map.get("createDate"));
         } else if (action.equals("update")) {

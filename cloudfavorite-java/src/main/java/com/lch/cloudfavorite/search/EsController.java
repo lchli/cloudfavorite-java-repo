@@ -54,21 +54,18 @@ public class EsController {
     @GetMapping(value = "/list")
     public SearchFavResponse searchPost(@RequestParam("page") int page, @RequestParam("size") int size,
                                         @RequestParam("keyword") String keyword, @RequestParam("sort") String sort,
-                                        @RequestParam("userId") String userId, @RequestParam("token") String token) {
+                                        @RequestParam(value = "userId",required = false) String userId,
+                                        @RequestParam(value = "token",required = false) String token) {
         SearchFavResponse queryResult = new SearchFavResponse();
         try {
 
 
-            if (StringUtils.isEmpty(userId) || StringUtils.isEmpty(token)) {
-                queryResult.markErrorCode();
-                queryResult.errmsg = "参数不能为空";
-                return queryResult;
-            }
-
-            if (!tokenUtil.isTokenValid(userId, token)) {
-                queryResult.markErrorCode();
-                queryResult.errmsg = "token无效";
-                return queryResult;
+            if (!StringUtils.isEmpty(userId)) {
+                if(StringUtils.isEmpty(token)||!tokenUtil.isTokenValid(userId, token)) {
+                    queryResult.markErrorCode();
+                    queryResult.errmsg = "token无效";
+                    return queryResult;
+                }
             }
 
 
@@ -93,7 +90,9 @@ public class EsController {
                 boolQueryBuilder.must(multiMatchQueryBuilder);
             }
 
-            boolQueryBuilder.must(QueryBuilders.commonTermsQuery("userId", userId));/////
+            if (!StringUtils.isEmpty(userId)) {
+                boolQueryBuilder.must(QueryBuilders.commonTermsQuery("userId", userId));/////
+            }
 
             //设置boolQueryBuilder到searchSourceBuilder
             searchSourceBuilder.query(boolQueryBuilder);

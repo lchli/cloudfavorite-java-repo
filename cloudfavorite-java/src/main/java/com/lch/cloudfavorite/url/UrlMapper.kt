@@ -20,4 +20,10 @@ interface UrlMapper {
 
     @Select("DELETE FROM url_entity WHERE uid = #{uid}")
     fun deleteByUid(@Param("uid") uid: String): Int?
+
+    @Select("SELECT * FROM url_entity")
+    fun findAll():  List<UrlEntity>?
+
+    @Update("update url_entity set title=#{title},url=#{url},createDate=#{createDate} where uid = #{uid}")
+    fun update(user: UrlEntity): Int
 }

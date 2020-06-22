@@ -3,6 +3,8 @@ package com.lch.cloudfavorite.url;
 import com.alibaba.fastjson.JSON;
 import com.lch.cloudfavorite.base.FavBaseResponse;
 import com.lch.cloudfavorite.msg.RabbitmqConfig;
+import com.lch.cloudfavorite.user.UserEntity;
+import com.lch.cloudfavorite.user.UserMapper;
 import com.lch.cloudfavorite.util.SingleInstances;
 import com.lch.cloudfavorite.util.TokenUtil;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -24,10 +26,13 @@ public class UrlFavController {
     UrlMapper urlMapper;
 
     @Autowired
+    UserMapper userMapper;
+
+    @Autowired
     RabbitTemplate rabbitTemplate;
 
     @PostMapping(value = "/add", produces = {MediaType.APPLICATION_JSON_VALUE})
-    public FavBaseResponse add(@RequestParam("title") String title, @RequestParam("url") String url,
+    public FavBaseResponse add(@RequestParam(value = "uid", required = false) String uid, @RequestParam("title") String title, @RequestParam("url") String url,
                                @RequestParam("userId") String userId, @RequestParam("token") String token) {
         FavBaseResponse response = new FavBaseResponse();
 
@@ -43,20 +48,40 @@ public class UrlFavController {
                 response.errmsg = "token无效";
                 return response;
             }
+            String action = "write";
+            UrlEntity entity;
+            if (!StringUtils.isEmpty(uid)) {
+                entity = urlMapper.findByUid(uid);
+                if (entity == null) {
+                    response.markErrorCode();
+                    response.errmsg = "帖子不存在";
+                    return response;
+                }
+                if (!entity.userId.equals(userId)) {
+                    response.markErrorCode();
+                    response.errmsg = "无权限";
+                    return response;
+                }
+                entity.url = url;
+                entity.title = title;
+                entity.createDate = System.currentTimeMillis();
+                urlMapper.update(entity);
 
-            UrlEntity entity = new UrlEntity();
-            entity.url = url;
-            entity.title = title;
-            entity.userId = userId;
-            entity.createDate = System.currentTimeMillis();
-            entity.uid = SingleInstances.snowFlake.nextId() + "";
+                action = "update";
+            } else {
+                entity = new UrlEntity();
+                entity.url = url;
+                entity.title = title;
+                entity.userId = userId;
+                entity.createDate = System.currentTimeMillis();
+                entity.uid = SingleInstances.snowFlake.nextId() + "";
 
-            urlMapper.save(entity);
-
+                urlMapper.save(entity);
+            }
 
             //创建消息对象
             Map<String, String> msg = new HashMap<>();
-            msg.put("action", "write");
+            msg.put("action", action);
             msg.put("url", url);
             msg.put("title", title);
             msg.put("userId", userId);
@@ -164,4 +189,81 @@ public class UrlFavController {
         return response;
     }
 
+
+    @GetMapping("/queryAllFavs")
+    public FavBaseResponse queryAllFavs(@RequestParam(value = "appSign", required = false) String sign
+    ) {
+        UrlListResponse response = new UrlListResponse();
+
+        try {
+//            if (StringUtils.isEmpty(userId) || StringUtils.isEmpty(token)) {
+//                response.markErrorCode();
+//                response.errmsg = "参数不能为空";
+//                return response;
+//            }
+
+//            if (!tokenUtil.isTokenValid(userId, token)) {
+//                response.markErrorCode();
+//                response.errmsg = "token无效";
+//                return response;
+//            }
+
+            response.items = urlMapper.findAll();
+
+        } catch (Throwable e) {
+            e.printStackTrace();
+            response.markErrorCode();
+            response.errmsg = e.getMessage();
+        }
+
+        return response;
+    }
+
+    @GetMapping("/queryPostDetail")
+    public FavBaseResponse queryPostDetail(@RequestParam(value = "postId") String postId
+    ) {
+        UrlResponse response = new UrlResponse();
+
+        try {
+            if (StringUtils.isEmpty(postId)) {
+                response.markErrorCode();
+                response.errmsg = "参数不能为空";
+                return response;
+            }
+
+//            if (!tokenUtil.isTokenValid(userId, token)) {
+//                response.markErrorCode();
+//                response.errmsg = "token无效";
+//                return response;
+//            }
+
+            UrlEntity entity = urlMapper.findByUid(postId);
+            if (entity == null) {
+                response.markErrorCode();
+                response.errmsg = "帖子不存在";
+                return response;
+            }
+            UserEntity user = userMapper.findByUid(entity.userId);
+            if (user == null) {
+                response.markErrorCode();
+                response.errmsg = "帖子不存在";
+                return response;
+            }
+
+            response.userId = entity.userId;
+            response.uid = entity.uid;
+            response.url = entity.url;
+            response.createDate = entity.createDate;
+            response.title = entity.title;
+            response.userName = user.account;
+
+
+        } catch (Throwable e) {
+            e.printStackTrace();
+            response.markErrorCode();
+            response.errmsg = e.getMessage();
+        }
+
+        return response;
+    }
 }
